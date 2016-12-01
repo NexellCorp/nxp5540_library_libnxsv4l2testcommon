@@ -70,7 +70,7 @@ static void print_help(void)
 	fprintf(stdout, "-l\tloop count\tinteger\n");
 	fprintf(stdout, "-m\tv4l2 memory type\tstring\n");
 	fprintf(stdout, "-d\tdisplay on\tbool\n");
-	fprintf(stdout, "-H\tprint this\t\n");
+	fprintf(stdout, "-q\tprint this\t\n");
 	fprintf(stdout, "\n");
 	fprintf(stdout, "Available formats(see videodev2.h)\n");
 	fprintf(stdout, "AR15  => ARGB-1-5-5-5 16bit\n");
@@ -193,6 +193,11 @@ nxs_v4l2_test_common_print_option(struct nxs_v4l2_test_common_option *option)
 		fprintf(stdout, "dst buf_type: %s\n", str);
 	}
 
+	if (option->crop_width && option->crop_height)
+		fprintf(stdout, "crop: [%d:%d:%d:%d]\n", option->crop_x,
+			option->crop_y, option->crop_width,
+			option->crop_height);
+
 	fprintf(stdout, "display: %s\n",
 		option->display ? "on" : "off");
 }
@@ -204,7 +209,7 @@ int nxs_v4l2_test_common_get_option(int argc, char *argv[], uint32_t test_type,
 
 	set_default_option(option);
 
-	while ((opt = getopt(argc, argv, "w:h:f:b:W:H:F:B:l:m:dq")) != -1) {
+	while ((opt = getopt(argc, argv, "w:h:f:b:W:H:F:B:l:m:c:dq")) != -1) {
 		switch (opt) {
 		case 'w':
 			option->width = atoi(optarg);
@@ -248,6 +253,11 @@ int nxs_v4l2_test_common_get_option(int argc, char *argv[], uint32_t test_type,
 			break;
 		case 'd':
 			option->display = true;
+			break;
+		case 'c':
+			sscanf(optarg, "%d:%d:%d:%d", &option->crop_x,
+			       &option->crop_y, &option->crop_width,
+			       &option->crop_height);
 			break;
 		case 'q':
 			print_help();
@@ -564,6 +574,7 @@ static int v4l2_test_qbuf(int fd, int index, uint32_t buf_type, uint32_t memory,
 	int i;
 	int ret;
 
+	bzero(v4l2_planes, sizeof(struct v4l2_plane) * MAX_NUM_PLANES);
 	bzero(&v4l2_buf, sizeof(v4l2_buf));
 	v4l2_buf.type = buf_type;
 	v4l2_buf.memory = memory;
@@ -607,6 +618,7 @@ static int v4l2_test_dqbuf(int fd, int *index, uint32_t buf_type,
 	struct v4l2_buffer v4l2_buf;
 	struct v4l2_plane v4l2_planes[MAX_NUM_PLANES];
 
+	bzero(v4l2_planes, sizeof(struct v4l2_plane) * MAX_NUM_PLANES);
 	bzero(&v4l2_buf, sizeof(v4l2_buf));
 	v4l2_buf.type = buf_type;
 	v4l2_buf.memory = memory;
@@ -1097,4 +1109,54 @@ int nxs_v4l2_test_common_m2m(int fd,
 	}
 
 	return 0;
+}
+
+int nxs_v4l2_test_common_flyby(int fd,
+			       struct nxs_v4l2_test_common_option *option)
+{
+	int ret;
+	int loop_count;
+
+	ret = nxs_v4l2_subdev_set_format(fd, option->width, option->height,
+					 option->format, V4L2_FIELD_NONE);
+	if (ret) {
+		fprintf(stderr, "failed to nxs_v4l2_subdev_set_format\n");
+		return ret;
+	}
+
+	if (option->dst_width > 0) {
+		ret = nxs_v4l2_subdev_set_dstformat(fd, option->dst_width,
+						    option->dst_height,
+						    option->dst_format,
+						    V4L2_FIELD_NONE);
+		if (ret) {
+			fprintf(stderr, "failed to nxs_v4l2_subdev_set_dstformat\n");
+			return ret;
+		}
+	}
+
+	if (option->crop_width > 0) {
+		ret = nxs_v4l2_subdev_set_crop(fd, option->crop_x,
+					       option->crop_y,
+					       option->crop_width,
+					       option->crop_height);
+		if (ret) {
+			fprintf(stderr, "failed to nxs_v4l2_subdev_set_crop\n");
+			return ret;
+		}
+	}
+
+	ret = nxs_v4l2_subdev_start(fd);
+	if (ret) {
+		fprintf(stderr, "failed to nxs_v4l2_subdev_start\n");
+		return ret;
+	}
+
+	loop_count = option->loop_count;
+	while (loop_count >= 0) {
+		loop_count--;
+		usleep(10000);
+	}
+
+	return nxs_v4l2_subdev_stop(fd);
 }

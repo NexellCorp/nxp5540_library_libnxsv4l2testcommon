@@ -36,6 +36,10 @@ struct nxs_v4l2_test_common_option {
 	uint32_t memory;
 	uint32_t buf_type; /* m2m: src, output path */
 	uint32_t dst_buf_type; /* m2m: dst, capture path */
+	uint32_t crop_x; /* flyby: source crop start x */
+	uint32_t crop_y; /* flyby: source crop start y */
+	uint32_t crop_width; /* flyby: source crop width */
+	uint32_t crop_height; /* flyby: source crop height */
 	bool     display;
 };
 
@@ -43,6 +47,7 @@ enum nxs_v4l2_test_type {
 	NXS_V4L2_TEST_TYPE_CAPTURE = 1,
 	NXS_V4L2_TEST_TYPE_RENDER,
 	NXS_V4L2_TEST_TYPE_M2M,
+	NXS_V4L2_TEST_TYPE_FLYBY,
 };
 
 int nxs_v4l2_test_common_get_option(int argc, char *argv[], uint32_t test_type,
@@ -55,6 +60,8 @@ int nxs_v4l2_test_common_render(int fd,
 				struct nxs_v4l2_test_common_option *option);
 int nxs_v4l2_test_common_m2m(int fd,
 			     struct nxs_v4l2_test_common_option *option);
+int nxs_v4l2_test_common_flyby(int fd,
+			       struct nxs_v4l2_test_common_option *option);
 
 #ifdef __cplusplus
 }
