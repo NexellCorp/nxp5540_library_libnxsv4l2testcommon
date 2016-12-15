@@ -36,6 +36,7 @@
 #include <nxs-v4l2.h>
 #include <nx-drm.h>
 
+#include <nxs_function.h>
 #include "nxs-v4l2-test-common.h"
 
 #define MAX_BUFFER_COUNT	16
@@ -51,6 +52,7 @@ static void set_default_option(struct nxs_v4l2_test_common_option *option)
 	option->loop_count = 100;
 	option->memory = V4L2_MEMORY_DMABUF;
 	option->display = false;
+	option->module = NXS_FUNCTION_ANY;
 }
 
 static void print_help(void)
@@ -70,6 +72,7 @@ static void print_help(void)
 	fprintf(stdout, "-l\tloop count\tinteger\n");
 	fprintf(stdout, "-m\tv4l2 memory type\tstring\n");
 	fprintf(stdout, "-d\tdisplay on\tbool\n");
+	fprintf(stdout, "-M\tfirst element index\tinteger\n");
 	fprintf(stdout, "-q\tprint this\t\n");
 	fprintf(stdout, "\n");
 	fprintf(stdout, "Available formats(see videodev2.h)\n");
@@ -122,6 +125,7 @@ nxs_v4l2_test_common_print_option(struct nxs_v4l2_test_common_option *option)
 
 	fprintf(stdout, "NXS V4L2 TEST OPTION\n");
 	fprintf(stdout, "========================\n");
+	fprintf(stdout, "first element module: %d\n", option->module);
 	fprintf(stdout, "width: %d\n", option->width);
 	fprintf(stdout, "height: %d\n", option->height);
 	fprintf(stdout, "format: %c%c%c%c\n",
@@ -209,7 +213,7 @@ int nxs_v4l2_test_common_get_option(int argc, char *argv[], uint32_t test_type,
 
 	set_default_option(option);
 
-	while ((opt = getopt(argc, argv, "w:h:f:b:W:H:F:B:l:m:c:dq")) != -1) {
+	while ((opt = getopt(argc, argv, "w:h:f:b:W:H:F:B:l:m:c:M:dq")) != -1) {
 		switch (opt) {
 		case 'w':
 			option->width = atoi(optarg);
@@ -250,6 +254,9 @@ int nxs_v4l2_test_common_get_option(int argc, char *argv[], uint32_t test_type,
 					optarg);
 				return -EINVAL;
 			}
+			break;
+		case 'M':
+			option->module = atoi(optarg);
 			break;
 		case 'd':
 			option->display = true;

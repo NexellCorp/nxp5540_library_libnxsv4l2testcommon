@@ -24,6 +24,7 @@ extern "C" {
 #endif
 
 struct nxs_v4l2_test_common_option {
+	uint32_t module;
 	uint32_t width;
 	uint32_t height;
 	uint32_t format;
