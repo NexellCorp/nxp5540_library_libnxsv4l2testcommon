@@ -41,6 +41,7 @@ struct nxs_v4l2_test_common_option {
 	uint32_t crop_y; /* flyby: source crop start y */
 	uint32_t crop_width; /* flyby: source crop width */
 	uint32_t crop_height; /* flyby: source crop height */
+	int display_channel; /* render: blending target display channel num */
 	bool     display;
 };
 

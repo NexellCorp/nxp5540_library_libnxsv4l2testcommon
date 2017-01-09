@@ -53,6 +53,7 @@ static void set_default_option(struct nxs_v4l2_test_common_option *option)
 	option->memory = V4L2_MEMORY_DMABUF;
 	option->display = false;
 	option->module = NXS_FUNCTION_ANY;
+	option->display_channel = -1;
 }
 
 static void print_help(void)
@@ -73,6 +74,7 @@ static void print_help(void)
 	fprintf(stdout, "-m\tv4l2 memory type\tstring\n");
 	fprintf(stdout, "-d\tdisplay on\tbool\n");
 	fprintf(stdout, "-M\tfirst element index\tinteger\n");
+	fprintf(stdout, "-D\tdisplay channel number\tinteger\n");
 	fprintf(stdout, "-q\tprint this\t\n");
 	fprintf(stdout, "\n");
 	fprintf(stdout, "Available formats(see videodev2.h)\n");
@@ -202,8 +204,13 @@ nxs_v4l2_test_common_print_option(struct nxs_v4l2_test_common_option *option)
 			option->crop_y, option->crop_width,
 			option->crop_height);
 
+	if (option->display_channel >= 0)
+		fprintf(stdout, "display channel: %d\n",
+			option->display_channel);
+
 	fprintf(stdout, "display: %s\n",
 		option->display ? "on" : "off");
+
 }
 
 int nxs_v4l2_test_common_get_option(int argc, char *argv[], uint32_t test_type,
@@ -213,7 +220,8 @@ int nxs_v4l2_test_common_get_option(int argc, char *argv[], uint32_t test_type,
 
 	set_default_option(option);
 
-	while ((opt = getopt(argc, argv, "w:h:f:b:W:H:F:B:l:m:c:M:dq")) != -1) {
+	while ((opt =
+		getopt(argc, argv, "w:h:f:b:W:H:F:B:l:m:c:M:D:dq")) != -1) {
 		switch (opt) {
 		case 'w':
 			option->width = atoi(optarg);
@@ -257,6 +265,9 @@ int nxs_v4l2_test_common_get_option(int argc, char *argv[], uint32_t test_type,
 			break;
 		case 'M':
 			option->module = atoi(optarg);
+			break;
+		case 'D':
+			option->display_channel = atoi(optarg);
 			break;
 		case 'd':
 			option->display = true;
